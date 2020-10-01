@@ -5,7 +5,7 @@
 
 // import { PropsExtended, Message } from "./types"
 import { eventNames } from "./constants"
-import { default as cuid } from "cuid"
+import * as cuid from "cuid"
 import { deepMerge } from "@sparkwave/standard/collections/object"
 import { Obj } from "@sparkwave/standard/utility"
 
@@ -140,7 +140,7 @@ class IdProvider {
 	}
 	next() {
 		if (this.pointer >= this.cache.length) {
-			this.cache.push(cuid())
+			this.cache.push(cuid.default())
 		}
 		return this.cache[this.pointer++]
 	}
