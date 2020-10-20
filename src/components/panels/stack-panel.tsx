@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { createElement } from '../../core'
-import { Component, Props, Orientation } from '../../types'
+import { Component, PanelProps, HtmlProps } from '../../types'
 
-export type Props = Partial<Props.Panel> & Props.Html & {
+export type Props = PanelProps & HtmlProps & {
 }
 
 export const StackPanel: Component<Props> = async (props) => {
@@ -53,7 +53,7 @@ export const StackPanel: Component<Props> = async (props) => {
 				style={{
 					display: "flex",
 					...style,
-					flexDirection: orientation === Orientation.vertical ? "column" : "row",
+					flexDirection: orientation === "vertical" ? "column" : "row",
 					justifyContent: justifyContent(),
 					alignItems: alignItems()
 				}}>

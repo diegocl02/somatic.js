@@ -9,32 +9,34 @@
 
 import * as assert from "assert"
 import { createElement, render, renderToString, hydrate } from '../dist/index.js'
-import { FileInput } from '../dist/components/index.js'
-import { config, idProvider } from '../dist/utils'
+import { makeFileInput } from '../dist/components'
+import { idProvider } from '../dist/utils'
 import { constructElement, normalizeHTML } from './utils'
 const jsdom = require('mocha-jsdom')
 jsdom({ url: 'http://localhost', skipWindowCheck: true })
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
+const internalPropsCache = {
+	storage: {} as Record<string, any>,
+	get: function (key: string) { return this.storage[key] },
+	set: function (key: string, payload: any) {
+		this.storage[key] = {
+			...this.storage[key],
+			payload
+		}
+	},
+}
+const FileInput = makeFileInput({ internalPropsCache })
+
 describe("Somatic", () => {
 	describe("render", () => {
-		// eslint-disable-next-line fp/no-let
-		// let container: HTMLElement | null
-		// beforeEach(() => {
-		// 	container = document.createElement('div')
-		// 	document.body.appendChild(container)
-		// })
-		// afterEach(() => {
-		// 	container?.remove()
-		// 	container = null
-		// })
 
 		it("should return element with same html as renderToString", async () => {
 			try {
+				//console.log(`Starting 'should return element with same html as renderToString' test`)
 				const vNode = <FileInput
 					icon={() => <span></span>}
-					theme={config.theme}
 					labelStyle={{}}
 					loadAs="array"
 					style={{ height: "auto", width: "auto", fontSize: "14px" }}
@@ -42,13 +44,14 @@ describe("Somatic", () => {
 				</FileInput>
 
 				const renderedHTML = (await render(vNode) as Element).outerHTML
+				//console.log(`renderedNodeHTML: ${renderedHTML}`)
+
 				idProvider.reset()
 				const renderedString = await renderToString(vNode)
-
-				// console.log(`renderedNodeHTML: ${renderedHTML}`)
-				// console.log(`renderedString: ${renderedString}`)
+				//console.log(`renderedString: ${renderedString}`)
 
 				assert.equal(normalizeHTML(renderedHTML), normalizeHTML(renderedString))
+
 			}
 			catch (e) {
 				console.error(e)

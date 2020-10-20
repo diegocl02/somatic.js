@@ -3,14 +3,17 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createElement, stringifyStyle } from "../../core"
 import { first } from "@sparkwave/standard/collections/iterable"
-import { Component, Props, CSSProperties } from '../../types'
-import { idProvider, mergeProps, config } from '../../utils'
+import { Component, HtmlProps, CSSProperties } from '../../types'
+import { mergeProps } from '../../core'
+import { idProvider } from '../../utils'
 
-type Messages = { type: "HOVER_START" } | { type: "HOVER_STOP" }
+// type Messages = { type: "HOVER_START" } | { type: "HOVER_STOP" }
 
-type Props = Props.Html & Props.Themed & { hoverStyle?: CSSProperties }
+type Props = HtmlProps & {
+	hoverStyle?: CSSProperties
+}
 
-export const HoverBox: Component<Props, Messages> = async (props) => {
+export const HoverBox: Component<Props> = async (props) => {
 	const defaultProps = Object.freeze({
 		style: {
 			height: "auto",
@@ -23,7 +26,6 @@ export const HoverBox: Component<Props, Messages> = async (props) => {
 
 	const {
 		children,
-		theme,
 		postMsgAsync,
 		hoverStyle,
 		style,
@@ -33,16 +35,16 @@ export const HoverBox: Component<Props, Messages> = async (props) => {
 	const className__ = idProvider.next()
 	// eslint-disable-next-line fp/no-let
 	let child = children ? await first(children) : undefined
-	if (typeof child === "object") {
+	if (child && "props" in child) {
 		// eslint-disable-next-line fp/no-mutation
 		child = {
 			...child,
 			props: {
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				...child.props as any,
+				...child.props,
 				className: className__,
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				style: (child.props as any)?.style || {},
+				style: child.props?.style ?? {},
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				onMouseEnter: (e: unknown) => { if (postMsgAsync) postMsgAsync({ type: "HOVER_START" }) },
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
@@ -55,23 +57,22 @@ export const HoverBox: Component<Props, Messages> = async (props) => {
 		child = await (<div {...htmlProps} className={className__}>{child}</div>)
 	}
 
-	const html = `
-		.${className__} {${stringifyStyle({ ...style }, true)}
-
-		}
-        .${className__}:hover {${stringifyStyle({
-		color: config.theme.colors.blackish,
-		...defaultProps.hoverStyle,
-		...hoverStyle
-	}, true)}}
-                
-        input[type="text"].${className__} {${stringifyStyle({
-		backgroundColor: "#fff",
-	}, true)}}
-    `
 
 	return <div style={{ display: "inline" }}>
-		<style>{html}</style>
+		<style>
+			{`
+				.${className__} {
+					${stringifyStyle({ ...style }, true)}
+				}
+				.${className__}:hover {
+					${stringifyStyle({ color: 'black', ...hoverStyle }, true)}
+				}					
+				input[type="text"].${className__} {
+					${stringifyStyle({ backgroundColor: "#fff", }, true)}
+				}
+			`}
+		</style>
+
 		{child}
 	</div>
 }

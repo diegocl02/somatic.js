@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable fp/no-rest-parameters */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable brace-style */
@@ -8,8 +9,9 @@ import fastMemoize from 'fast-memoize'
 import { VNode, VNodeType, PropsExtended, Message, CSSProperties } from "./types"
 import { setAttribute, isEventKey, camelCaseToDash, encodeHTML, idProvider } from "./utils"
 import { svgTags, eventNames, mouseMvmntEventNames, } from "./constants"
-import { Obj } from "@sparkwave/standard"
+import { Obj, Primitive } from "@sparkwave/standard/utility"
 import { flatten } from "@sparkwave/standard/collections"
+import { deepMerge } from "@sparkwave/standard/collections/object"
 
 // export const Fragment = (async () => ({})) as Renderer
 export const fnStore: ((evt: Event) => unknown)[] = []
@@ -20,7 +22,7 @@ export function createElement<P extends Obj = Obj, T extends VNodeType<P> = VNod
 }
 
 /** Render virtual node to DOM node */
-export async function render<P extends Obj = Obj>(vnode?: { toString(): string } | VNode<P> | Promise<VNode<P>>): Promise<Node> {
+export async function render<P extends Obj = Obj>(vnode?: Primitive | Object | VNode<PropsExtended<P>> | Promise<VNode<PropsExtended<P>>>, parentKey?: string): Promise<Node> {
 	// console.log(`Starting render of vnode: ${JSON.stringify(vnode)}`)
 
 	if (vnode === null || vnode === undefined) {
@@ -32,16 +34,25 @@ export async function render<P extends Obj = Obj>(vnode?: { toString(): string }
 	if (typeof _vnode === 'object' && 'type' in _vnode && 'props' in _vnode) {
 		// console.log(`vNode is object with 'type' and 'props' properties`)
 
-		const children = [...flatten(_vnode.children || []) as JSX.Element[]]
+		const children = [...flatten([_vnode.children]) as JSX.Element[]]
 		switch (typeof _vnode.type) {
 			case "function": {
 				// console.log(`vNode type is function, rendering as custom component`)
-				const _props: PropsExtended<P, Message> = { ..._vnode.props, children: [...children] }
+				const _props: PropsExtended<P, Message> = {
+					// eslint-disable-next-line @typescript-eslint/no-empty-function
+					..._vnode.props,
+					key: _vnode.props.key
+						? parentKey
+							? parentKey + "__" + _vnode.props.key
+							: _vnode.props.key
+						: undefined,
+					children: [...children]
+				}
 				const element = await _vnode.type(_props)
 
 				return element.children === undefined
 					? await memoizedRender(element)
-					: await render(element) // If element has children, we don't use the cache system (yet)
+					: await render(element, _props.key) // If element has children, we don't use the cache system (yet)
 			}
 
 			case "string": {
@@ -52,7 +63,7 @@ export async function render<P extends Obj = Obj>(vnode?: { toString(): string }
 
 				// render and append children in order
 				await Promise
-					.all(children.map(c => render(c)))
+					.all(children.map(c => render(c, parentKey)))
 					.then(rendered => rendered.forEach(child => node.appendChild(child)))
 
 				// attach attributes
@@ -62,17 +73,7 @@ export async function render<P extends Obj = Obj>(vnode?: { toString(): string }
 						const propValue: unknown = nodeProps[propKey]
 						if (propValue !== undefined) {
 							const htmlPropKey = propKey.toUpperCase()
-							if (isEventKey(htmlPropKey) && htmlPropKey === "ONLOAD") {
-								// eslint-disable-next-line fp/no-mutating-methods
-								fnStore.push(propValue as (evt: Event) => unknown)
-								node.setAttribute(propKey.toLowerCase(), `${fnStore.length - 1}`)
-
-								// const callback: (evt: Event) => void = fnStore[fnStore.length - 1]
-								// node.addEventListener(eventNames[htmlPropKey], { handleEvent: callback })
-
-								node.setAttribute(htmlPropKey, `(${((propValue as (evt: Event) => unknown).toString())})(this);`)
-							}
-							else if (isEventKey(htmlPropKey) && typeof propValue === "function") { // The first condition is here simply to prevent useless searches through the events list.
+							if (isEventKey(htmlPropKey) && typeof propValue === "function") { // The first condition is here simply to prevent useless searches through the events list.
 								const eventId = idProvider.next()
 								// We attach an eventId per possible event: an element having an onClick and onHover will have 2 such properties.
 								node.setAttribute(`data-${htmlPropKey}-eventId`, eventId)
@@ -191,7 +192,6 @@ export async function renderToString<P extends Obj = Obj>(vnode?: { toString(): 
 	}*/
 }
 
-// const memoizedRenderToString = memoize(renderToString, (obj: VNode) => obj.props)
 
 /** Attach event listeners from element to corresponding nodes in container */
 export function hydrate(element: HTMLElement): void {
@@ -237,6 +237,7 @@ const addListener = (node: Node, event: string, handler: (e: Event) => void, cap
 	node.addEventListener(event, handler, capture)
 }
 
+/** Remove all event listeners */
 export const removeAllListeners = (targetNode: Node) => {
 	Object.keys(_eventHandlers).forEach(eventName => {
 		// remove listeners from the matching nodes
@@ -251,18 +252,6 @@ export const removeAllListeners = (targetNode: Node) => {
 		)
 	})
 }
-
-/*export function difference(object: Obj, base: Obj): Obj {
-	function changes(_object: Obj, _base: Obj) {
-		return transform(_object, function (result: Obj, value, key) {
-			if (!isEqual(value, _base[key])) {
-				result[key] = (isObject(value) && isObject(_base[key])) ? changes(value, _base[key]) : value
-			}
-		})
-	}
-	return changes(object, base)
-}*/
-
 
 /** Converts a css props object literal to a string */
 export function stringifyStyle(style: CSSProperties, important = false) {
@@ -300,4 +289,9 @@ export function stringifyAttribs(props: Obj) {
 		})
 		.filter(attrHTML => attrHTML?.length > 0)
 		.join(" ")
+}
+
+/** Merge default props with actual props of renderer */
+export function mergeProps<P extends Obj, D extends Partial<P>>(defaults: D, props: P): D & P & Partial<P> {
+	return deepMerge(defaults, props) as D & P & Partial<P>
 }

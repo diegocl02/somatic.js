@@ -1,59 +1,53 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
+/* eslint-disable brace-style */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Obj } from "@sparkwave/standard"
-import { createElement } from '../../core'
-import { PropsExtended, CSSProperties, Component, Icon } from '../../types'
-// import * as Icons from "./icons"
+import { createElement, mergeProps } from '../../core'
+import { StyleProps, CSSProperties, Component, Icon } from '../../types'
 
-interface Props {
-	style?: CSSProperties,
+export type Props = StyleProps & {
 	isChecked: boolean,
-	disabled: boolean,
-	disabledStyle?: CSSProperties,
 	checkedColor?: string,
-	useRadio: boolean,
+
+	isDisabled: boolean,
+	disabledStyle?: CSSProperties,
+
 	iconSize?: string,
-	icons: { CheckedBox: Icon, UnCheckedBox: Icon, CheckedRadioButton: Icon, UnCheckedRadioButton: Icon }
+	icons: {
+		checked: Icon,
+		unchecked: Icon
+	}
 }
 
 const defaultProps = {
 	isChecked: false,
-	disabled: false,
-	useRadio: false,
+	isDisabled: false,
 	disabledStyle: { color: "#ebebe0" },
-	checkedColor: "#d477b0"
+	checkedColor: "#d477b0",
+	postMsgAsync: async () => { }
 }
 
 export const CheckBoxInput: Component<Props> = async (props) => {
-	const _props = { ...defaultProps, ...props || {} } as PropsExtended<Props>
-	const icons = _props.icons
+	const {
+		isDisabled,
+		disabledStyle,
+		isChecked,
+		style,
+		checkedColor,
+		icons,
+		iconSize,
+		postMsgAsync,
+		children
+	} = mergeProps(defaultProps, props) //as PropsExtended<Props>
 
-	const checkBoxStyle = _props.disabled
-		? { ..._props.style, ..._props.disabledStyle }
-		: { ..._props.style }
+	const checkBoxStyle = isDisabled ? { ...style, ...disabledStyle } : { ...style }
 
-	return <div style={{ ...checkBoxStyle }}
-		onClick={e => {
-			if (!_props.disabled && _props.postMsgAsync)
-				_props.postMsgAsync({ type: "ON_CLICK" })
-		}}>
+	return <div
+		style={{ ...checkBoxStyle }}
+		onClick={e => { if (!isDisabled) postMsgAsync({ type: "ON_CLICK" }) }}>
 
-		{!_props.useRadio
-			? _props.isChecked
-				? <icons.CheckedBox style={{
-					color: _props.disabled ? _props.disabledStyle?.color : _props.checkedColor,
-					height: _props.iconSize
-				}} />
-				: <icons.UnCheckedBox style={{
-					height: _props.iconSize
-				}} />
-			: _props.isChecked
-				? <icons.CheckedRadioButton style={{
-					color: _props.disabled ? _props.disabledStyle?.color : _props.checkedColor,
-					height: _props.iconSize
-				}} />
-				: <props.icons.UnCheckedRadioButton style={{
-					height: _props.iconSize
-				}} />
+		{isChecked
+			? <icons.checked key="checked-icon" style={{ color: isDisabled ? disabledStyle?.color : checkedColor, height: iconSize }} />
+			: <icons.unchecked key="unchecked-icon" style={{ height: iconSize }} />
 		}
 	</div>
 }

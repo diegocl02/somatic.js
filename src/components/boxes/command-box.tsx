@@ -1,13 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable brace-style */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { createElement } from '../../core'
-import { mergeProps } from '../../utils'
-import { Component, Props as SomaticProps, Orientation, Alignment, CSSProperties } from '../../types'
+import { createElement, mergeProps } from '../../core'
+import { Component, HtmlProps, PanelProps, ButtonHTMLAttributes, CSSProperties } from '../../types'
 import { StackPanel } from '../panels/stack-panel'
 
 export const enum BtnMode { Normal = "normal", Selected = "selected", Disabled = "disabled" }
 
-type Props = SomaticProps.Themed & {
+type Props = HtmlProps & ButtonHTMLAttributes<any> & {
 	/** Icon component to be placed next to the title of the button */
 	icon?: Component<{ style: CSSProperties }>
 
@@ -21,7 +22,7 @@ type Props = SomaticProps.Themed & {
 	style?: CSSProperties
 
 	/** Orientation for the container of the children */
-	orientation?: Orientation
+	orientation?: PanelProps["orientation"]
 
 	/** Tooltip title to display */
 	tooltip?: string
@@ -32,15 +33,13 @@ type Props = SomaticProps.Themed & {
 	/** normal disabled or selected */
 	mode?: BtnMode
 }
-
-interface Messages {
-	clicked: { type: "CLICKED", data?: undefined }
-}
+interface Messages { type: "CLICKED" }
 
 const defaultProps = {
-	orientation: Orientation.horizontal,
+	orientation: "horizontal" as const,
 	tooltip: "",
 	hoverEffect: "invert" as const,
+
 	style: {
 		fontSize: "1em",
 		color: "#666",
@@ -59,58 +58,41 @@ const defaultProps = {
 	mode: BtnMode.Normal
 }
 
-export const CommandBox: Component<Props, Messages[keyof Messages]> = async (props) => {
+export const CommandBox: Component<Props, Messages> = async (props) => {
 	const {
-		tooltip, children,
-		orientation, iconPlacement, iconStyle, icon,
-		theme, mode, style, hoverEffect,
+		tooltip,
+		orientation,
+		iconPlacement, iconStyle, icon,
+		style, hoverEffect,
+		mode,
 		postMsgAsync,
+		children,
 		...htmlProps
 	} = mergeProps(defaultProps, props)
 
-	const iconContent = props.icon ? <props.icon style={iconStyle || {}} /> : <div />
-	const mainContent = (
-		<StackPanel orientation={orientation} itemsAlignV={Alignment.center} style={{ height: "100%" }}>
-			{children}
-		</StackPanel>
-	)
-	const colors = {
-		[BtnMode.Normal]: {
-			foreground: theme.colors.primary.dark,
-			background: "transparent"
-		},
-		[BtnMode.Selected]: {
-			foreground: "white",
-			background: theme.colors.primary.dark
-		},
-		[BtnMode.Disabled]: {
-			foreground: theme.colors.grayish,
-			background: "transparent"
-		}
-	}[mode]
+	const iconContent = props.icon ? <props.icon key="icon-content" style={iconStyle || {}} /> : <div />
+	const mainContent = <StackPanel key="main-content"
+		orientation={orientation}
+		itemsAlignV={"center"}
+		style={{ height: "100%" }}>
+		{children}
+	</StackPanel>
 
 	return <button
-		title={tooltip || defaultProps.tooltip}
-		onClick={(e) => {
-			if (props.postMsgAsync) {
-				props.postMsgAsync({ type: "CLICKED" })
-			}
-		}}
+		title={tooltip}
+		onClick={(e) => { if (postMsgAsync) { postMsgAsync({ type: "CLICKED" }) } }}
 		{...htmlProps}
 		style={{
-			...props.theme === undefined
-				? {}
-				: {
-					color: colors.foreground,
-					backgroundColor: colors.background,
-					borderColor: colors.foreground
-				},
+			...htmlProps.disabled !== undefined
+				? { color: 'gray', borderColor: `gray` }
+				: {},
 
 			...defaultProps.style,
 			...style
 		}}>
-		<StackPanel
-			itemsAlignV={Alignment.center}
+
+		<StackPanel key="container"
+			itemsAlignV={"center"}
 			orientation={orientation}>
 			{iconPlacement === "before" ? [iconContent, mainContent] : [mainContent, iconContent]}
 		</StackPanel>
