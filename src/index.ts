@@ -2,7 +2,6 @@
 export * from './types'
 export * from './core'
 export * from './components'
-export * from './components/types'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import * as Somatic from "./types"
@@ -12,7 +11,7 @@ declare global {
 
 		interface IntrinsicElements {
 			html: Somatic.HtmlHTMLAttributes<HTMLHeadingElement>,
-			form: Somatic.HTMLAttributes<HTMLFormElement>;
+			form: Somatic.FormHTMLAttributes<HTMLFormElement>;
 			div: Somatic.HTMLAttributes<HTMLDivElement>;
 			h1: Somatic.HTMLAttributes<HTMLHeadingElement>,
 			h2: Somatic.HTMLAttributes<HTMLHeadingElement>,
