@@ -5,7 +5,7 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { deepMerge } from '@sparkwave/standard/collections/object'
 
-import { createElement, mergeProps } from '../core'
+import { createElement, mergeProps, makeComponent } from '../core'
 import { CSSProperties, PropsExtended, PanelProps, ViewProps } from '../types'
 import { StackPanel } from './index'
 
@@ -19,7 +19,7 @@ export type Props<T = unknown> = PanelProps & ViewProps<T> & {
 	style?: CSSProperties
 }
 
-export async function StackView<T>(props: PropsExtended<Props<T>, Messages>) {
+export const StackView = makeComponent({})<Props, Messages>(async (props) => {
 	const defaultProps = {
 		selectedItemIndex: 0,
 		selectedItemStyle: {} as CSSProperties,
@@ -61,4 +61,4 @@ export async function StackView<T>(props: PropsExtended<Props<T>, Messages>) {
 		console.error(`StackView render: ${e}`)
 		throw e
 	}
-}
+})
