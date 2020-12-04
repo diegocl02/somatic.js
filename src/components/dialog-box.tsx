@@ -1,25 +1,24 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { map, first, last } from "@sparkwave/standard/collections"
-import { createElement, mergeProps } from '../core'
-import { Component, StyleProps, CSSProperties, Icon } from '../types'
+import { createElement, mergeProps, makeComponent } from '../core'
+import { Component, StyleProps, CSSProperties } from '../types'
 import { StackPanel } from './stack-panel'
 import { HoverBox } from './hover-box'
 import { CommandBox } from './command-box'
 
-export type ButtonInfo = { label: string, icon?: Icon, action: () => void }
+export type ButtonInfo = { label: string, icon?: JSX.Element, action: () => void }
 
 export type Props = StyleProps & {
-	header?: { title: string, icon?: Icon } | JSX.Element
+	header?: { title: string, icon?: JSX.Element } | JSX.Element
 	buttons?: Iterable<ButtonInfo>
 	buttonTemplate?: (info: ButtonInfo) => JSX.Element
 }
 
 const defaultProps = {
-	// header: { title: "" } as NonNullable<Props["header"]>,
 	buttons: [] as Iterable<ButtonInfo>
 }
 
-export const DialogBox: Component<Props> = async (props) => {
+export const DialogBox = makeComponent({})<Props>(async (props) => {
 	const { buttons, style, header, buttonTemplate } = mergeProps(defaultProps, props)
 
 	const mainContent = () => {
@@ -68,7 +67,7 @@ export const DialogBox: Component<Props> = async (props) => {
 					}}>
 
 					{"icon" in header && header.icon
-						? <header.icon style={{ height: "1em", position: "relative", top: "3px" }} />
+						? header.icon
 						: undefined
 					}
 					<span> {header.title} </span>
@@ -102,15 +101,15 @@ export const DialogBox: Component<Props> = async (props) => {
 								<CommandBox
 									icon={button.icon}
 									iconPlacement={"before"}
-									iconStyle={{
-										left: "0",
-										position: "relative",
-										height: "1rem",
-										marginTop: "0",
-										marginBottom: "0",
-										marginRight: "0.25rem",
-										marginLeft: 0
-									}}
+									// iconStyle={{
+									// 	left: "0",
+									// 	position: "relative",
+									// 	height: "1rem",
+									// 	marginTop: "0",
+									// 	marginBottom: "0",
+									// 	marginRight: "0.25rem",
+									// 	marginLeft: 0
+									// }}
 									style={{
 										height: "1em",
 										fontWeight: isLastButton ? "bold" : "normal",
@@ -134,4 +133,4 @@ export const DialogBox: Component<Props> = async (props) => {
 		console.error(`DialogBox render\n${e}`)
 		throw e
 	}
-}
+})

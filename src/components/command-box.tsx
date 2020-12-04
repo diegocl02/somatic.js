@@ -1,31 +1,23 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable brace-style */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { createElement, mergeProps } from '../core'
+import { createElement, mergeProps, makeComponent, makeComponent1 } from '../core'
 import { Component, HtmlProps, PanelProps, ButtonHTMLAttributes, CSSProperties } from '../types'
 import { StackPanel } from './stack-panel'
 
 export const enum BtnMode { Normal = "normal", Selected = "selected", Disabled = "disabled" }
 
-type Props = HtmlProps & ButtonHTMLAttributes<any> & {
-	/** Icon component to be placed next to the title of the button */
-	icon?: Component<{ style: CSSProperties }>
+type Props = Partial<HtmlProps & ButtonHTMLAttributes<any>> & {
+	/** Icon component to be placed next/before the title of the button */
+	icon?: JSX.Element
 
 	/** Relative postion of the icon in relationship with the title */
 	iconPlacement?: "before" | "after"
 
-	/** Icon style */
-	iconStyle?: CSSProperties
-
-	/** Style of the component */
-	style?: CSSProperties
-
 	/** Orientation for the container of the children */
 	orientation?: PanelProps["orientation"]
-
-	/** Tooltip title to display */
-	tooltip?: string
 
 	/** how colors should change on hover (or selection) */
 	hoverEffect?: "darken" | "invert"
@@ -33,45 +25,50 @@ type Props = HtmlProps & ButtonHTMLAttributes<any> & {
 	/** normal disabled or selected */
 	mode?: BtnMode
 }
+// eslint-disable-next-line @typescript-eslint/ban-types
+type State = {}
+
 interface Messages { type: "CLICKED" }
 
-const defaultProps = {
-	orientation: "horizontal" as const,
-	tooltip: "",
-	hoverEffect: "invert" as const,
 
-	style: {
-		fontSize: "1em",
-		color: "#666",
-		borderColor: "#666",
-		borderWidth: "1px",
-		borderStyle: "solid",
-		padding: "0",
-		margin: "0",
-		overflow: "hidden",
-		borderRadius: "2px",
-		cursor: "pointer"
-	},
+export const CommandBox = makeComponent({
+	defaultProps: () => ({
+		orientation: "horizontal" as const,
+		hoverEffect: "invert" as const,
 
-	iconStyle: { padding: 0 },
-	iconPlacement: "before" as const,
+		style: {
+			fontSize: "1em",
+			color: "#666",
+			borderColor: "#666",
+			borderWidth: "1px",
+			borderStyle: "solid",
+			padding: "0",
+			margin: "0",
+			overflow: "hidden",
+			borderRadius: "2px",
+			cursor: "pointer"
+		},
 
-	mode: BtnMode.Normal
-}
-
-export const CommandBox: Component<Props, Messages> = async (props) => {
+		iconPlacement: "before" as const,
+		mode: BtnMode.Normal,
+		postMsgAsync: () => { }
+	}),
+	defaultState: (props) => ({})
+})<Props, Messages, State>(async (_, props, state) => {
 	const {
-		tooltip,
 		orientation,
-		iconPlacement, iconStyle, icon,
+		iconPlacement, icon,
 		style, hoverEffect,
 		mode,
 		postMsgAsync,
 		children,
 		...htmlProps
-	} = mergeProps(defaultProps, props)
+	} = props
 
-	const iconContent = props.icon ? <props.icon key="icon-content" style={iconStyle || {}} /> : <div />
+	const iconContent = props.icon
+		? props.icon
+		: <div />
+
 	const mainContent = <StackPanel key="main-content"
 		orientation={orientation}
 		itemsAlignV={"center"}
@@ -80,15 +77,13 @@ export const CommandBox: Component<Props, Messages> = async (props) => {
 	</StackPanel>
 
 	return <button
-		title={tooltip}
-		onClick={(e) => { if (postMsgAsync) { postMsgAsync({ type: "CLICKED" }) } }}
+		onClick={(e) => { postMsgAsync({ type: "CLICKED" }) }}
 		{...htmlProps}
 		style={{
 			...htmlProps.disabled !== undefined
 				? { color: 'gray', borderColor: `gray` }
 				: {},
 
-			...defaultProps.style,
 			...style
 		}}>
 
@@ -98,4 +93,5 @@ export const CommandBox: Component<Props, Messages> = async (props) => {
 			{iconPlacement === "before" ? [iconContent, mainContent] : [mainContent, iconContent]}
 		</StackPanel>
 	</button>
-}
+})
+

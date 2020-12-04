@@ -6,16 +6,17 @@
 import { deepMerge } from '@sparkwave/standard/collections/object'
 
 import { createElement, mergeProps } from '../core'
-import { CSSProperties, PropsExtended, ViewProps } from '../types'
-import { StackPanel, Props as StackPanelProps } from './stack-panel'
+import { CSSProperties, PropsExtended, PanelProps, ViewProps } from '../types'
+import { StackPanel } from './index'
 
 export type Messages = (
 	{ type: "selection", data: number }
 )
 
-export type Props<T = unknown> = StackPanelProps & ViewProps<T> & {
+export type Props<T = unknown> = PanelProps & ViewProps<T> & {
 	selectedItemIndex: number,
-	selectedItemStyle?: CSSProperties
+	selectedItemStyle?: CSSProperties,
+	style?: CSSProperties
 }
 
 export async function StackView<T>(props: PropsExtended<Props<T>, Messages>) {

@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-import { deepMerge } from '@sparkwave/standard/collections/object'
-import { RecursivePartial } from '@sparkwave/standard'
+import { deepMerge, } from '@sparkwave/standard/collections/object'
 
 import { StackView, Props as StackViewProps } from './stack-view'
 import { StackPanel, Props as StackPanelProps } from './stack-panel'
 import { Component, CSSProperties, HtmlProps, ViewProps } from '../types'
-import { createElement } from '../core'
+import { createElement, makeComponent } from '../core'
 
 
 export type Messages = (
@@ -16,26 +15,29 @@ export type Messages = (
 export type Props = HtmlProps & {
 	headers: ViewProps<string>
 	selectedIndex?: number
+	selectedItemStyle: CSSProperties
 }
 
-export const TabsPanel: Component<Props, Messages> = (props) => {
+export const TabsPanel = makeComponent({})<Props>(async (props) => {
 
 	const defaultProps/*: RecursivePartial<Props>*/ = {
 		selectedIndex: 0,
+		selectedItemStyle: {
+			fontWeight: "bold"
+		},
 		headers: {
-			itemTemplate: (headerInfo: { item: unknown, index: number }) => <div>{headerInfo.item}</div>,
-			selectedItemStyle: {
-				fontWeight: "bold"
-			}
-		}
+			itemTemplate: (headerInfo: { item: unknown, index: number }) => <div>{headerInfo.item}</div>
+		},
+		postMsgAsync: async (msg: Messages) => ""
 	}
 
 	const {
 		headers,
 		selectedIndex,
+		selectedItemStyle,
 
 		children,
-
+		postMsgAsync,
 		style,
 		...htmlProps
 	} = deepMerge(defaultProps, props)
@@ -46,8 +48,14 @@ export const TabsPanel: Component<Props, Messages> = (props) => {
 			orientation={"horizontal"}
 			sourceData={headers.sourceData}
 			itemStyle={headers.itemStyle}
-			selectedItemStyle={headers.selectedItemStyle}
+			selectedItemStyle={selectedItemStyle}
 			itemTemplate={headers.itemTemplate}
+			postMsgAsync={async msg => {
+				postMsgAsync({
+					type: "selection",
+					data: [...headers.sourceData][msg.data]
+				})
+			}}
 			selectedItemIndex={selectedIndex}>
 
 		</StackView>
@@ -56,5 +64,5 @@ export const TabsPanel: Component<Props, Messages> = (props) => {
 			{(children ?? [])[selectedIndex]}
 		</div>
 	</StackPanel>
-}
+})
 
