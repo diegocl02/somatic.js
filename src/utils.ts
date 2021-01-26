@@ -25,6 +25,7 @@ export function setAttribute(dom: HTMLElement | SVGElement, key: string, value: 
 			dom.classList.add(cl)
 		})
 	}
+	//TODO: style with an event handler ?? See if we can remove
 	else if (key == 'style' && typeof value == 'object') {
 		// console.log(`Somatic set ${key} attribute to value: ${JSON.stringify(value)}`)
 		// eslint-disable-next-line fp/no-mutating-assign
