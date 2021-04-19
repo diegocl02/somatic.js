@@ -44,6 +44,15 @@ declare global {
 			option: Somatic.OptionHTMLAttributes<HTMLOptionElement>;
 			textarea: Somatic.TextareaHTMLAttributes<HTMLTextAreaElement>;
 
+			table: Somatic.TableHTMLAttributes<HTMLTableElement>,
+			th: Somatic.ThHTMLAttributes<HTMLTableHeaderCellElement>,
+			tr: Somatic.HTMLAttributes<HTMLTableRowElement>,
+			td: Somatic.TdHTMLAttributes<HTMLTableDataCellElement>,
+			frame: Somatic.HTMLAttributes<HTMLFrameElement>,
+			audio: Somatic.AudioHTMLAttributes<HTMLAudioElement>,
+			img: Somatic.ImgHTMLAttributes<HTMLImageElement>,
+			canvas: Somatic.CanvasHTMLAttributes<HTMLCanvasElement>,
+
 			/* svg */
 			svg: Somatic.SVGAttributes<SVGSVGElement>,
 			g: Somatic.SVGAttributes<SVGGElement>,
