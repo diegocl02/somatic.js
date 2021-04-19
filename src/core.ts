@@ -42,14 +42,7 @@ export async function render<Props extends Obj, State>(vnode?: Primitive | Objec
 			case "function": {
 				// console.log(`vNode type is function, rendering as custom component`)
 				const vnodeType = _vnode.type
-
-				const _props: PropsExtended<Props, Message> = {
-					..._vnode.props,
-					children: [...children]
-				}
-
-				// if ("defaultProps" in vnodeType && hasValue(vnodeType.defaultProps))
-				// 	console.log(`vnodeType.defaultProps = ${vnodeType.defaultProps}, type=${typeof vnodeType.defaultProps}`)
+				const _props: PropsExtended<Props, Message> = { ..._vnode.props, children: [...children] }
 
 				const fullProps = mergeProps("defaultProps" in vnodeType && vnodeType.defaultProps && typeof vnodeType.defaultProps === "function"
 					? vnodeType.defaultProps()
@@ -355,10 +348,11 @@ export function mergeProps<P extends Obj, D extends Partial<P>>(defaults: D, pro
 }
 
 
-export const makeComponent = <DP, DS>(args: {
-	defaultProps?: () => DP,
-	defaultState?: (props: DP) => DS
-}) => {
+export const makeComponent = <DP, DS>(args:
+	{
+		defaultProps?: () => DP,
+		defaultState?: (props: DP) => DS
+	}) => {
 	return <P extends Obj = Obj, M extends Message = Message, S = {}>(
 		comp: (
 			props: PropsExtended<P, M>,
@@ -370,13 +364,14 @@ export const makeComponent = <DP, DS>(args: {
 	}
 }
 
-export function makeComponent1<P extends Obj, M extends Message, S>() {
+export function makeComponent1<P extends Obj, M extends Message = Message, S = unknown>() {
 	return <DP extends Partial<P>, DS extends Partial<S>>(
 		comp: (
 			_: PropsExtended<P, M>,
 			props: MergedPropsExt<P, M, DP>,
 			state: DS & S & Partial<S> & { setState: (delta: Partial<S>) => void }
 		) => JSX.Element,
+
 		opts: {
 			defaultProps: () => DP,
 			defaultState: (props?: P) => DS,
