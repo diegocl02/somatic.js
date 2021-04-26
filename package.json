@@ -1,5 +1,5 @@
 {
-  "name": "@sparkwave/somatic",
+  "name": "@diegocl02/test-somatic",
   "version": "2.0.0",
   "description": "Functional, Asynchronous, Component-based UI Library that works with JSX",
   "main": "index.js",
